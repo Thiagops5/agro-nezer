@@ -5,17 +5,18 @@
 
 ---
 
-## Sumário Rápido
-- [2. Visão Geral da Estrutura (`nezer-app`)](#2-visão-geral-da-estrutura-nezer-app)
-- [2.1. Arquitetura Next.js (App Router)](#21-arquitetura-nextjs-app-router)
-  - [2.1.1. Server Components, Server Actions e `useActionState`](#211-server-components-server-actions-e-useactionstate)
-  - [2.1.2. Controle de Sessão, Refresh Token e Proteção de Rotas (`proxy.ts`)](#212-controle-de-sessão-refresh-token-e-proteção-de-rotas-proxyts)
-- [2.2. Lógicas de Campo (Mobile-First e Offline)](#22-lógicas-de-campo-mobile-first-e-offline)
-  - [2.2.1. Alerta Sanitário Reativo no `<select>` e Termo de Ciência Obrigatório](#221-alerta-sanitário-reativo-no-select-e-termo-de-ciência-obrigatório)
-  - [2.2.2. Fila Offline (`localStorage`), Câmera Traseira e GPS](#222-fila-offline-localstorage-câmera-traseira-e-gps)
+## Sumário Rápido (Clique para ir direto ao trecho)
+- [2. Visão Geral da Estrutura (`nezer-app`)](#2-visao-geral)
+- [2.1. Arquitetura Next.js (App Router)](#2-1-arquitetura-nextjs)
+  - [2.1.1. Server Components, Server Actions e `useActionState`](#2-1-1-server-components)
+  - [2.1.2. Controle de Sessão, Refresh Token e Proteção de Rotas (`proxy.ts`)](#2-1-2-sessao-rotas)
+- [2.2. Lógicas de Campo (Mobile-First e Offline)](#2-2-logicas-campo)
+  - [2.2.1. Alerta Sanitário Reativo no `<select>` e Termo de Ciência Obrigatório](#2-2-1-alerta-sanitario)
+  - [2.2.2. Fila Offline (`localStorage`), Câmera Traseira e GPS](#2-2-2-offline-camera-gps)
 
 ---
 
+<a id="2-visao-geral"></a>
 ## 2. Visão Geral da Estrutura (`nezer-app`)
 
 O `nezer-app` utiliza **Next.js (App Router) + React + TypeScript + Tailwind CSS**, espelhando exatamente a organização da Biblioteca (`jwt-app`), com todas as rotas e Server Actions em português:
@@ -41,8 +42,10 @@ nezer-app/
 
 ---
 
+<a id="2-1-arquitetura-nextjs"></a>
 ## 2.1. Arquitetura Next.js (App Router)
 
+<a id="2-1-1-server-components"></a>
 ### 2.1.1. Server Components, Server Actions e `useActionState`
 
 Cada funcionalidade dentro de `app/dashboard/<modulo>/` separa claramente leitura e escrita:
@@ -50,6 +53,7 @@ Cada funcionalidade dentro de `app/dashboard/<modulo>/` separa claramente leitur
 2. **`<Modulo>Form.tsx` (Client Component `'use client'`):** Recebe as opções auxiliares por props e utiliza o hook `useActionState` conectado a uma *Server Action* da pasta `actions/`:
    * A Server Action envia o `POST`/`PUT`/`PATCH` para o `nezer-api` com o token do cookie, chama `revalidatePath(...)` para atualizar a listagem automaticamente e retorna feedback visual amigável.
 
+<a id="2-1-2-sessao-rotas"></a>
 ### 2.1.2. Controle de Sessão, Refresh Token e Proteção de Rotas (`proxy.ts`)
 
 * **`lib/session.ts`:** Gerencia os cookies `httpOnly` com `accessToken` e `refreshToken` e extrai os dados da sessão (`id`, `username`, `isAdmin`).
@@ -58,8 +62,10 @@ Cada funcionalidade dentro de `app/dashboard/<modulo>/` separa claramente leitur
 
 ---
 
+<a id="2-2-logicas-campo"></a>
 ## 2.2. Lógicas de Campo (Mobile-First e Offline)
 
+<a id="2-2-1-alerta-sanitario"></a>
 ### 2.2.1. Alerta Sanitário Reativo no `<select>` e Termo de Ciência Obrigatório
 
 Na tela de **Nova Colheita (`/dashboard/colheitas`)**:
@@ -74,6 +80,7 @@ Na tela de **Nova Colheita (`/dashboard/colheitas`)**:
    `[ ] Estou ciente de que este talhão está em período de carência e confirmo o registro desta colheita.`
 4. Na tabela do Admin, colheitas registradas nessas condições recebem destaque visual em vermelho (`ALERTA SANITÁRIO`).
 
+<a id="2-2-2-offline-camera-gps"></a>
 ### 2.2.2. Fila Offline (`localStorage`), Câmera Traseira e GPS
 
 * **Câmera Traseira Nativa:** Os inputs de foto em `AplicacaoForm.tsx` e `ColheitaForm.tsx` usam `accept="image/*" capture="environment" required` para abrir direto a câmera traseira do celular.

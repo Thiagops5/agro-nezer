@@ -8,9 +8,9 @@ Repositório oficial do MVP desenvolvido como **Trabalho de Conclusão de Curso 
 
 Toda a documentação do projeto foi organizada de forma compacta em **1 arquivo principal por camada** (seguindo a hierarquia `1.` -> `1.1` -> `1.1.1` dentro de cada documento):
 
-* 🖥️ **[1. Documentação Técnica do Back-end (`nezer-api`)](./documentacao-tecnica/back-end/DOCUMENTACAO_BACKEND.md)**
+* 🖥️ **[1. Documentação Técnica do Back-end (`nezer-api`)](./documentacao-tecnica/documentcao-back-end/DOCUMENTACAO_BACKEND.md)**
   * *Arquitetura em camadas, lógica da tabela `Talhao` (`percentualMeeiro`, `carenciaAte`, `ultimoInsumoNome`, `area`), bloqueio `409 Conflict` com usuário vinculado, prevalência de carência, custo congelado e regra dos 7 dias ou > R$ 10.000,00.*
-* 📱 **[2. Documentação Técnica do Front-end (`nezer-app`)](./documentacao-tecnica/front-end/DOCUMENTACAO_FRONTEND.md)**
+* 📱 **[2. Documentação Técnica do Front-end (`nezer-app`)](./documentacao-tecnica/documentacao-front-end/DOCUMENTACAO_FRONTEND.md)**
   * *Next.js App Router (`Server Components` + `Server Actions`), sessão/refresh token, Alerta Sanitário reativo com Termo de Ciência, câmera traseira, GPS e fila offline no `localStorage`.*
 * 📋 **[3. Engenharia de Requisitos (RF, RNF e RN)](./documentacao-tecnica/requisitos/REQUISITOS.md)**
   * *Requisitos Funcionais, Não Funcionais e Regras de Negócio no padrão acadêmico do TCC.*
@@ -26,8 +26,8 @@ Toda a documentação do projeto foi organizada de forma compacta em **1 arquivo
 ```text
 nezer/
 ├── documentacao-tecnica/
-│   ├── back-end/DOCUMENTACAO_BACKEND.md
-│   ├── front-end/DOCUMENTACAO_FRONTEND.md
+│   ├── documentcao-back-end/DOCUMENTACAO_BACKEND.md
+│   ├── documentacao-front-end/DOCUMENTACAO_FRONTEND.md
 │   ├── requisitos/REQUISITOS.md
 │   ├── diagramas-casos-de-uso/README.md
 │   └── arquitetura-e-extras/ARQUITETURA_E_EXTRAS.md

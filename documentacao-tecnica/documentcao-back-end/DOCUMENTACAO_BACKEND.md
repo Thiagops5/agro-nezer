@@ -5,21 +5,22 @@
 
 ---
 
-## Sumário Rápido
-- [1. Visão Geral e Arquitetura em Camadas](#1-visão-geral-e-arquitetura-em-camadas)
-- [1.1. Módulos e Entidades do Back-end](#11-módulos-e-entidades-do-back-end)
-  - [1.1.1. Módulo `talhao/` (Quadras, Percentual, Carência e Área)](#111-módulo-talhao-quadras-percentual-carência-e-área)
-  - [1.1.2. Módulos `cultura/` e `insumo/` (Preços Fixados e Bula Sanitária)](#112-módulos-cultura-e-insumo-preços-fixados-e-bula-sanitária)
-  - [1.1.3. Módulos `aplicacao/` e `colheita/` (Manejo, Fotos e Conferência)](#113-módulos-aplicacao-e-colheita-manejo-fotos-e-conferência)
-  - [1.1.4. Módulo `acerto/` (Fechamento "Acerto a Meia" e PIX)](#114-módulo-acerto-fechamento-acerto-a-meia-e-pix)
-  - [1.1.5. Módulos `usuario/` e `auth/` (Perfis Admin/Meeiro e JWT)](#115-módulos-usuario-e-auth-perfis-adminmeeiro-e-jwt)
-- [1.2. Lógicas Complexas de Negócio](#12-lógicas-complexas-de-negócio)
-  - [1.2.1. Integridade Referencial e Bloqueio de Exclusão (`409 Conflict`)](#121-integridade-referencial-e-bloqueio-de-exclusão-409-conflict)
-  - [1.2.2. Prevalência da Maior Carência e Custo Congelado (`db.transaction`)](#122-prevalencia-da-maior-carência-e-custo-congelado-dbtransaction)
-  - [1.2.3. Regra do Acerto a Meia: Prazo de 7 Dias ou Exceção > R$ 10.000,00](#123-regra-do-acerto-a-meia-prazo-de-7-dias-ou-exceção--r-1000000)
+## Sumário Rápido (Clique para ir direto ao trecho)
+- [1. Visão Geral e Arquitetura em Camadas](#1-visao-geral)
+- [1.1. Módulos e Entidades do Back-end](#1-1-modulos)
+  - [1.1.1. Módulo `talhao/` (Quadras, Percentual, Carência e Área)](#1-1-1-talhao)
+  - [1.1.2. Módulos `cultura/` e `insumo/` (Preços Fixados e Bula Sanitária)](#1-1-2-cultura-insumo)
+  - [1.1.3. Módulos `aplicacao/` e `colheita/` (Manejo, Fotos e Conferência)](#1-1-3-aplicacao-colheita)
+  - [1.1.4. Módulo `acerto/` (Fechamento "Acerto a Meia" e PIX)](#1-1-4-acerto)
+  - [1.1.5. Módulos `usuario/` e `auth/` (Perfis Admin/Meeiro e JWT)](#1-1-5-usuario-auth)
+- [1.2. Lógicas Complexas de Negócio](#1-2-logicas)
+  - [1.2.1. Integridade Referencial e Bloqueio de Exclusão (`409 Conflict`)](#1-2-1-bloqueio-409)
+  - [1.2.2. Prevalência da Maior Carência e Custo Congelado (`db.transaction`)](#1-2-2-carencia-custo)
+  - [1.2.3. Regra do Acerto a Meia: Prazo de 7 Dias ou Exceção > R$ 10.000,00](#1-2-3-acerto-7-dias)
 
 ---
 
+<a id="1-visao-geral"></a>
 ## 1. Visão Geral e Arquitetura em Camadas
 
 O `nezer-api` é construído com **Node.js + Express 5 + Sequelize + SQLite3 + JWT + Multer**, seguindo exatamente a mesma arquitetura modular em 4 camadas da Biblioteca (`jwt-api`):
@@ -39,8 +40,10 @@ Nos métodos de leitura (`findAll` e `findById`), retornamos diretamente a consu
 
 ---
 
+<a id="1-1-modulos"></a>
 ## 1.1. Módulos e Entidades do Back-end
 
+<a id="1-1-1-talhao"></a>
 ### 1.1.1. Módulo `talhao/` (Quadras, Percentual, Carência e Área)
 
 O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (culturas de ciclo rápido e colheita múltipla), mas como `Talhao` se liga dinamicamente à tabela `Cultura` (`culturaId`), o sistema suporta **qualquer cultura agrícola** — incluindo **grãos (soja, milho)** e **tubérculos (batata, mandioca)**.
@@ -70,6 +73,7 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
 
 ---
 
+<a id="1-1-2-cultura-insumo"></a>
 ### 1.1.2. Módulos `cultura/` e `insumo/` (Preços Fixados e Bula Sanitária)
 
 * **`cultura.model.js`:** Possui `nomeCultura` (único) e os **3 preços fixados pelo Admin** por canal de escoamento:
@@ -81,6 +85,7 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
 
 ---
 
+<a id="1-1-3-aplicacao-colheita"></a>
 ### 1.1.3. Módulos `aplicacao/` e `colheita/` (Manejo, Fotos e Conferência)
 
 * **`aplicacao.model.js`:** Registra `dataAplicacao`, `quantidadeAplicada`, `custoUnitarioCongelado`, `custoTotal`, `carenciaDiasAplicada`, `dataFimCarencia`, `urlFoto`, `latitude`, `longitude`, `status` e as FKs `talhaoId`, `insumoId`, `usuarioId` e `acertoFinanceiroId` (nullable: `null` enquanto não entrou em nenhum acerto).
@@ -89,6 +94,7 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
 
 ---
 
+<a id="1-1-4-acerto"></a>
 ### 1.1.4. Módulo `acerto/` (Fechamento "Acerto a Meia" e PIX)
 
 * **`acerto.model.js`:** Armazena `dataAcerto`, `receitas`, `descontos`, `saldoLiquido`, `percentualMeeiro`, `valorAcerto` (Meeiro), `valorProdutor`, `statusPagamento` (`PENDENTE`, `PAGO`), `urlComprovantePix` (nullable) e as FKs `talhaoId` e `usuarioId`.
@@ -96,6 +102,7 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
 
 ---
 
+<a id="1-1-5-usuario-auth"></a>
 ### 1.1.5. Módulos `usuario/` e `auth/` (Perfis Admin/Meeiro e JWT)
 
 * **`usuario.model.js`:** Armazena `nome`, `username`, `email`, `cpf`, `telefone`, `senha` (hash bcrypt), `isAdmin` (`true` = Produtor/Admin, `false` = Meeiro/Parceiro) e `ativo` (`false` bloqueia o login preservando o histórico). Sobrescreve `toJSON()` para nunca retornar `senha` no JSON.
@@ -103,8 +110,10 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
 
 ---
 
+<a id="1-2-logicas"></a>
 ## 1.2. Lógicas Complexas de Negócio
 
+<a id="1-2-1-bloqueio-409"></a>
 ### 1.2.1. Integridade Referencial e Bloqueio de Exclusão (`409 Conflict`)
 
 Nunca podemos excluir uma entidade que esteja vinculada a um usuário ou a registros operacionais, pois isso quebraria a rastreabilidade exigida pela **INC nº 02/2018 (MAPA/ANVISA)** e o histórico financeiro do produtor.
@@ -139,6 +148,7 @@ E o `talhao.controller.js` intercepta `'possui registros vinculados'` e devolve 
 
 ---
 
+<a id="1-2-2-carencia-custo"></a>
 ### 1.2.2. Prevalência da Maior Carência e Custo Congelado (`db.transaction`)
 
 No `aplicacao.service.js`, tudo roda dentro de `const t = await db.transaction()`:
@@ -149,6 +159,7 @@ No `aplicacao.service.js`, tudo roda dentro de `const t = await db.transaction()
 
 ---
 
+<a id="1-2-3-acerto-7-dias"></a>
 ### 1.2.3. Regra do Acerto a Meia: Prazo de 7 Dias ou Exceção > R$ 10.000,00
 
 No `acerto.service.js`, dentro de `db.transaction()`:
