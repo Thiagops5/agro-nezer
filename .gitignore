@@ -1,0 +1,69 @@
+# ==============================================================================
+# .gitignore — Nezer Agro (Monorepo: nezer-api + nezer-app)
+# ==============================================================================
+
+# 1. Dependencias (Node.js / npm / yarn / pnpm)
+node_modules/
+.pnp.*
+.yarn/*
+.pnpm-store/
+
+# 2. Variaveis de Ambiente e Segredos (NUNCA subir .env real)
+.env
+.env.*
+!.env.example
+!.envex
+
+# 3. Banco de Dados Local (SQLite)
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db
+*.db-journal
+
+# 4. Uploads Locais do Multer (nao sobe fotos de teste, mas mantem a pasta via .gitkeep)
+nezer-api/uploads/*
+!nezer-api/uploads/.gitkeep
+
+# 5. Next.js / Front-end (nezer-app) e Builds
+.next/
+out/
+dist/
+build/
+.turbo/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# 6. Logs, Cache e Cobertura de Testes
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.eslintcache
+.stylelintcache
+coverage/
+.nyc_output/
+*.lcov
+*.pid
+*.seed
+*.pid.lock
+
+# 7. Sistema Operacional (Windows / macOS / Linux)
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+AppleDouble
+.LSOverride
+*~
+
+# 8. Editores / IDEs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
