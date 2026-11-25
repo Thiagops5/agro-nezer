@@ -78,7 +78,7 @@ A marca soa como um contador de confiança que conhece a roça: **justa, transpa
 A logo é **"metade fruta, metade letra"**: no lugar do **O**, meia goiaba cortada (polpa e sementes) e meia fruta inteira verde (que também remete ao limão) — duas metades de um mesmo fruto, como a parceria.
 
 ### Guia Rápido da Marca
-![Guia Rápido da Marca - Agro Nezer](./logos/guia-da-marca.jpg)
+![Guia Rápido da Marca - Agro Nezer](./logos/guia-da-marca.png)
 
 ### Aplicações da Marca (App, Site e Caixas de Colheita — Implementação Futura)
 > *Nota: A aplicação da marca nas caixas físicas de colheita é uma visão de **implementação futura** pós-MVP.*
