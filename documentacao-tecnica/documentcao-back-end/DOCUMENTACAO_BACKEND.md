@@ -68,8 +68,8 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
      * `Colheita.urlFoto` (foto das caixas colhidas para o Admin conferir);
      * `AcertoFinanceiro.urlComprovantePix` (comprovante do pagamento PIX).
 
-4. **Uso do `include` no `talhao.service.js`:**
-   Tanto no `findAll` quanto no `findById`, incluímos `{ model: Cultura }` e `{ model: Usuario }` para trazer o nome da cultura, os 3 preços de caixa e o meeiro responsável em uma única chamada.
+4. **Uso do `include` no `talhao.service.js` e Meeiros Ajudantes (`N:M`):**
+   Tanto no `findAll` quanto no `findById`, incluímos `{ model: Cultura }`, `{ model: Usuario }` (o **Meeiro Responsável**, que recebe o Acerto Financeiro) e `{ model: Usuario, as: 'ajudantes' }` (relação `N:M` via tabela `TalhaoAjudante` para os **Meeiros Ajudantes** que também podem registrar aplicações e colheitas naquele talhão).
 
 ---
 

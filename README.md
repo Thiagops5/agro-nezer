@@ -18,6 +18,8 @@ Toda a documentação do projeto foi organizada de forma compacta em **1 arquivo
   * *Pasta reservada para salvar `diagrama-casos-de-uso.png` junto com a especificação de atores e casos de uso.*
 * 🗄️ **[5. Arquitetura de Dados (DER), Rotas da API e Glossário](./documentacao-tecnica/arquitetura-e-extras/ARQUITETURA_E_EXTRAS.md)**
   * *Diagrama DER em Mermaid, catálogo completo de rotas `/v1/*`, diagrama de sequência e glossário agronômico/jurídico.*
+* 🎨 **[6. Design, Identidade Visual, Marca e Guia de Componentes](./documentacao-tecnica/design-e-marca/DESIGN_E_MARCA.md)**
+  * *Brief oficial do Agro Nezer, guia rápido da marca (Verde Nezer / Goiaba, DM Sans), aplicações (app, site e caixas), guia de componentes, notificações e telas conceituais iniciais.*
 
 ---
 
@@ -30,7 +32,8 @@ nezer/
 │   ├── documentacao-front-end/DOCUMENTACAO_FRONTEND.md
 │   ├── requisitos/REQUISITOS.md
 │   ├── diagramas-casos-de-uso/README.md
-│   └── arquitetura-e-extras/ARQUITETURA_E_EXTRAS.md
+│   ├── arquitetura-e-extras/ARQUITETURA_E_EXTRAS.md
+│   └── design-e-marca/DESIGN_E_MARCA.md
 ├── nezer-api/                # Back-end REST API (Node.js, Express, Sequelize, SQLite, JWT, Multer)
 ├── nezer-app/                # Front-end Web Mobile-First (Next.js App Router, TypeScript, Tailwind)
 └── README.md

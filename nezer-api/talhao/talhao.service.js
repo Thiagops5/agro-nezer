@@ -4,18 +4,26 @@ const { Talhao, Cultura, Usuario, Aplicacao, Colheita, AcertoFinanceiro } = requ
 const talhaoService = {
     create: async (talhaoData) => {
         try {
-            return await Talhao.create(talhaoData);
+            const newTalhao = await Talhao.create(talhaoData);
+
+            // se o admin mandou uma lista de ids de meeiros ajudantes, faz a ligacao N:M na tabela intermediaria
+            if (talhaoData.ajudantes && talhaoData.ajudantes.length > 0) {
+                await newTalhao.setAjudantes(talhaoData.ajudantes);
+            }
+
+            return newTalhao;
         } catch (error) {
             throw new Error('Erro ao criar talhão: ' + error.message);
         }
     },
 
     findAll: async () => {
-        // traz a cultura (com os 3 precos de caixa) e o meeiro responsavel pelo talhao
+        // traz a cultura, o meeiro responsavel e os meeiros ajudantes vinculados ao talhao
         return await Talhao.findAll({
             include: [
                 { model: Cultura },
-                { model: Usuario }
+                { model: Usuario },
+                { model: Usuario, as: 'ajudantes', through: { attributes: [] } }
             ]
         });
     },
@@ -24,7 +32,8 @@ const talhaoService = {
         return await Talhao.findByPk(id, {
             include: [
                 { model: Cultura },
-                { model: Usuario }
+                { model: Usuario },
+                { model: Usuario, as: 'ajudantes', through: { attributes: [] } }
             ]
         });
     },
@@ -33,16 +42,24 @@ const talhaoService = {
         const talhao = await Talhao.findByPk(id);
         if (!talhao) throw new Error('Talhão não encontrado');
 
-        return await talhao.update(talhaoData);
+        await talhao.update(talhaoData);
+
+        // atualiza os meeiros ajudantes vinculados ao talhao se o array vier no body
+        if (talhaoData.ajudantes) {
+            await talhao.setAjudantes(talhaoData.ajudantes);
+        }
+
+        return talhao;
     },
 
     delete: async (id) => {
         const talhao = await Talhao.findByPk(id);
         if (!talhao) throw new Error('Talhão não encontrado');
 
-        // 1. Verifica se existe um usuario (meeiro) vinculado a este talhao
-        if (talhao.usuarioId) {
-            throw new Error('Não foi possível excluir talhão pois possui registros vinculados (meeiro responsável ativo neste talhão).');
+        // 1. Verifica se existe um meeiro responsavel ou meeiros ajudantes vinculados a este talhao
+        const ajudantesCount = await talhao.countAjudantes();
+        if (talhao.usuarioId || ajudantesCount > 0) {
+            throw new Error('Não foi possível excluir talhão pois possui registros vinculados (meeiro responsável ou ajudantes ativos neste talhão).');
         }
 
         // 2. Verifica se ja existem aplicacoes, colheitas ou acertos registrados neste talhao
