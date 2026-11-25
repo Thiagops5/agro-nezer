@@ -1,4 +1,8 @@
-# 🌱 Nezer Agro — Gestão de Parcerias Agrícolas ("Acerto a Meia") e Rastreabilidade Sanitária
+<p align="center">
+  <img src="./documentacao-tecnica/design-e-marca/logos/logo-horizontal-color.svg" alt="Agro Nezer" width="360" />
+</p>
+
+# 🌱 Agro Nezer — Gestão de Parcerias Agrícolas ("Acerto a Meia") e Rastreabilidade Sanitária
 
 Repositório oficial do MVP desenvolvido como **Trabalho de Conclusão de Curso (TCC)**. O **Nezer Agro** digitaliza o caderno de campo e automatiza o rateio financeiro de parcerias agrícolas regidas pelo **Estatuto da Terra (Lei nº 4.504/1964)** — nascido da vivência real na produção de **Goiaba, Tomate e Quiabo**, com arquitetura flexível para qualquer cultura agrícola (fruticultura, hortaliças, grãos como soja/milho e tubérculos como batata/mandioca).
 

@@ -80,6 +80,9 @@ A logo é **"metade fruta, metade letra"**: no lugar do **O**, meia goiaba corta
 ### Guia Rápido da Marca
 ![Guia Rápido da Marca - Agro Nezer](./logos/guia-da-marca.png)
 
+### Acabamento, Splash e Ícone no Celular (v2)
+![Acabamento da Marca - Agro Nezer](./logos/agro-nezer-acabamento.png)
+
 ### Aplicações da Marca (App, Site e Caixas de Colheita — Implementação Futura)
 > *Nota: A aplicação da marca nas caixas físicas de colheita é uma visão de **implementação futura** pós-MVP.*
 
