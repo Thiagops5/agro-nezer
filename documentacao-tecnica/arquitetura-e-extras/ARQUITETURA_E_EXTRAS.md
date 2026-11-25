@@ -20,7 +20,8 @@ erDiagram
     TALHAO ||--o{ COLHEITA : "produz (talhaoId)"
     TALHAO ||--o{ ACERTO_FINANCEIRO : "apura rateio (talhaoId)"
 
-    INSUMO ||--o{ APLICACAO : "utilizado em (insumoId)"
+    INSUMO ||--o{ APLICACAO_INSUMO : "compoe (insumoId)"
+    APLICACAO ||--|{ APLICACAO_INSUMO : "possui itens (aplicacaoId)"
 
     ACERTO_FINANCEIRO |o--o{ APLICACAO : "desconta (acertoFinanceiroId)"
     ACERTO_FINANCEIRO |o--o{ COLHEITA : "contabiliza (acertoFinanceiroId)"

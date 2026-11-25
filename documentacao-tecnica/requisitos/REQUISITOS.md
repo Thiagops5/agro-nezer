@@ -12,10 +12,10 @@
 | **RF01** | **Autenticação e Refresh Token:** Login via `username` e `senha`, com renovação automática de token e bloqueio de usuários com `ativo = false`. | Admin e Meeiro | Essencial |
 | **RF02** | **Gestão de Meeiros (`Usuario`):** Cadastrar, listar, editar e ativar/desativar contas de parceiros agrícolas (`isAdmin = false`). | Somente Admin | Essencial |
 | **RF03** | **Gestão de Culturas e 3 Preços (`Cultura`):** Cadastrar e gerenciar culturas (Goiaba, Tomate, Quiabo, grãos, tubérculos, etc.) com preços fixados para **Mercado**, **Atacado** e **Polpa**. | Somente Admin | Essencial |
-| **RF04** | **Gestão de Insumos (`Insumo`):** Cadastrar defensivos e fertilizantes com unidade de medida, custo unitário e dias de carência da bula (`carenciaDias`). | Somente Admin | Essencial |
+| **RF04** | **Gestão de Insumos e Nota Fiscal (`Insumo`):** Cadastrar defensivos e fertilizantes com unidade de medida, custo unitário, dias de carência da bula (`carenciaDias`) e anexo opcional da **Nota Fiscal (PDF ou imagem)**, além de confirmar insumos personalizados sugeridos pelos meeiros. | Somente Admin | Essencial |
 | **RF05** | **Gestão de Talhões (`Talhao`):** Cadastrar talhões vinculando Cultura, Meeiro responsável, área e `percentualMeeiro` (padrão 50%). | Admin (Escrita) / Ambos (Leitura) | Essencial |
 | **RF06** | **Monitoramento Visual de Carência:** Exibir selo verde ("Liberado") ou vermelho ("Em carência até DD/MM" + último insumo) nos talhões. | Admin e Meeiro | Essencial |
-| **RF07** | **Registro de Aplicação (`Aplicacao`):** Registrar aplicação com quantidade, foto obrigatória (`urlFoto`) e GPS, congelando o custo do dia e atualizando a carência do talhão. | Meeiro e Admin | Essencial |
+| **RF07** | **Registro de Aplicação com Múltiplos Insumos (`Aplicacao`):** Registrar aplicação selecionando **1 ou mais insumos** (ou informando um insumo personalizado para confirmação posterior do Admin), quantidades, foto obrigatória (`urlFoto`) e GPS, congelando custos e atualizando a carência pela maior data. | Meeiro e Admin | Essencial |
 | **RF08** | **Alerta Sanitário e Termo de Ciência:** Ao selecionar talhão em carência na colheita, exibir card vermelho e exigir aceite do Termo de Ciência. | Meeiro e Admin | Essencial |
 | **RF09** | **Registro de Colheita (`Colheita`):** Registrar colheita escolhendo destino (`MERCADO`, `ATACADO`, `POLPA`), caixas, foto obrigatória e GPS, calculando o valor pelo preço da Cultura. | Meeiro e Admin | Essencial |
 | **RF10** | **Conferência de Colheita pelo Admin:** Permitir ao Admin visualizar a foto das caixas e aprovar (`APROVADA`), ajustar quantidade com observação ou rejeitar (`REJEITADA`). | Somente Admin | Essencial |
@@ -48,3 +48,4 @@
 * **RN04 (Termo de Ciência Obrigatório):** Colheitas em talhão com `carenciaAte > hoje` exigem `termoCienciaAceito === true` (senão retorna HTTP `400`).
 * **RN05 (Filtro de Conferência):** Apenas colheitas `APROVADA` e com `acertoFinanceiroId === null` entram no Acerto Financeiro.
 * **RN06 (Regra dos 7 Dias ou > R$ 10.000,00):** Não é permitido gerar novo acerto para o mesmo talhão com menos de 7 dias desde o último acerto, **exceto** se `valorAcerto > 10000`.
+* **RN07 (Confirmação de Insumo Personalizado antes do Acerto):** Se um meeiro registrar uma aplicação com um insumo não cadastrado (personalizado), o valor e a carência definitivos dependem da confirmação do Admin; o sistema não deve fechar o Acerto Financeiro daquele talhão enquanto houver aplicação com insumo pendente de confirmação.

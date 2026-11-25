@@ -17,6 +17,7 @@
   - [1.2.1. Integridade Referencial e Bloqueio de Exclusão (`409 Conflict`)](#1-2-1-bloqueio-409)
   - [1.2.2. Prevalência da Maior Carência e Custo Congelado (`db.transaction`)](#1-2-2-carencia-custo)
   - [1.2.3. Regra do Acerto a Meia: Prazo de 7 Dias ou Exceção > R$ 10.000,00](#1-2-3-acerto-7-dias)
+  - [1.2.4. Decisões de Tipagem no Banco (`ENUM`, `STRING` e `DECIMAL`)](#1-2-4-tipagem-banco)
 
 ---
 
@@ -81,14 +82,18 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
   * `precoAtacado` (CEASA / grandes volumes);
   * `precoPolpa` (fruta madura para indústria / suco / doce).
   * O meeiro nunca digita valor em R$ na colheita; ele escolhe o destino e a API puxa o preço da Cultura.
-* **`insumo.model.js`:** Possui `nomeInsumo` (único), `tipoInsumo` (`DEFENSIVO`, `FERTILIZANTE`, `BIOLOGICO`, `OUTRO`), `unidadeMedida` (`L`, `ml`, `Kg`, `g`, `un`), `custoUnitario` (em R$ por 1 unidade da `unidadeMedida`) e `carenciaDias` (dias de carência da bula oficial).
+* **`insumo.model.js`:** Possui `nomeInsumo` (único), `tipoInsumo` (`DEFENSIVO`, `FERTILIZANTE`, `BIOLOGICO`, `OUTRO`), `unidadeMedida` (`L`, `ml`, `Kg`, `g`, `un`), `custoUnitario` (em R$ por 1 unidade da `unidadeMedida`, que será usado nos descontos do Acerto Financeiro), `carenciaDias` (dias de carência da bula oficial), **`urlNotaFiscal`** (caminho opcional da Nota Fiscal em **PDF ou imagem** enviada via `multer` para transparência do custo) e **`statusCadastro`** (`ENUM('CONFIRMADO', 'PENDENTE_CONFIRMACAO')` — permitindo que insumos sugeridos pelo meeiro na hora fiquem aguardando validação e preenchimento de preço/carência pelo Admin).
 
 ---
 
 <a id="1-1-3-aplicacao-colheita"></a>
 ### 1.1.3. Módulos `aplicacao/` e `colheita/` (Manejo, Fotos e Conferência)
 
-* **`aplicacao.model.js`:** Registra `dataAplicacao`, `quantidadeAplicada`, `custoUnitarioCongelado`, `custoTotal`, `carenciaDiasAplicada`, `dataFimCarencia`, `urlFoto`, `latitude`, `longitude`, `status` e as FKs `talhaoId`, `insumoId`, `usuarioId` e `acertoFinanceiroId` (nullable: `null` enquanto não entrou em nenhum acerto).
+* **`aplicacao.model.js` + `aplicacaoInsumo.model.js` (Múltiplos Insumos por Aplicação — "Mistura de Tanque"):**
+  * Uma única `Aplicacao` no campo pode conter **1 ou vários insumos** (relação `N:M` via tabela intermediária `AplicacaoInsumo`).
+  * **`Aplicacao` (cabeçalho da operação):** Registra `dataAplicacao`, `custoTotal` (soma dos itens da aplicação), `urlFoto`, `latitude`, `longitude`, `status` (`'REGISTRADA'` ou `'PENDENTE_INSUMO'` quando há item personalizado aguardando o Admin) e as FKs `talhaoId`, `usuarioId` e `acertoFinanceiroId` (nullable).
+  * **`AplicacaoInsumo` (cada insumo usado naquela mistura):** Registra `aplicacaoId`, `insumoId`, `quantidadeAplicada`, `unMedida`, `custoUnitarioCongelado`, `custoItem`, `carenciaDiasAplicada` e `dataFimCarencia`.
+  * **Fluxo do Insumo Personalizado na Hora:** Se o insumo não estiver na lista, o meeiro informa um nome personalizado (sem definir preço/carência). O sistema cria um pré-cadastro com `statusCadastro = 'PENDENTE_CONFIRMACAO'` (ou marca a aplicação como `'PENDENTE_INSUMO'`). Quando o **Admin** confirma o insumo preenchendo os dados completos (custo, carência da bula e Nota Fiscal em PDF/imagem), o sistema recalcula automaticamente o custo da aplicação (para entrar nos descontos do Acerto) e atualiza a carência do talhão!
 * **`colheita.model.js`:** Registra `dataColheita`, `tipoDestino` (`MERCADO`, `ATACADO`, `POLPA`), `qntCaixas`, `valorCaixaFixado`, `valorTotal`, `urlFoto`, `latitude`, `longitude`, `emCarencia`, `termoCienciaAceito`, `statusConferencia` (`PENDENTE`, `APROVADA`, `REJEITADA`), `observacaoAdmin` e as FKs `talhaoId`, `usuarioId` e `acertoFinanceiroId`.
   * Toda colheita nasce `PENDENTE`. O Admin abre a foto (`urlFoto`), confere a quantidade e chama `PATCH /v1/colheitas/:id/conferir` para aprovar ou rejeitar. **Só colheitas `APROVADA` entram no Acerto Financeiro.**
 
@@ -152,10 +157,10 @@ E o `talhao.controller.js` intercepta `'possui registros vinculados'` e devolve 
 ### 1.2.2. Prevalência da Maior Carência e Custo Congelado (`db.transaction`)
 
 No `aplicacao.service.js`, tudo roda dentro de `const t = await db.transaction()`:
-1. **Custo Unitário Congelado:** Copia `insumo.custoUnitario` para `custoUnitarioCongelado` e calcula `custoTotal = quantidadeAplicada * custoUnitarioCongelado`. Se o preço do insumo subir no mês seguinte, o passado financeiro nunca muda.
-2. **Prevalência da Maior Carência:**
-   * Se na segunda-feira foi aplicado um defensivo de **10 dias** de carência e na quarta-feira foi aplicado um adubo de **0 dias**, o talhão **não pode cair para 0 dias**!
-   * Regra: Só atualiza `talhao.carenciaAte` e `talhao.ultimoInsumoNome` se `insumo.carenciaDias > 0` **E** (`!talhao.carenciaAte` **OU** `dataFimCarencia > new Date(talhao.carenciaAte)`).
+1. **Custo Unitário Congelado (por item):** Para cada insumo da lista enviada na aplicação, copia `insumo.custoUnitario` para `custoUnitarioCongelado` em `AplicacaoInsumo`, calcula `custoItem = quantidadeAplicada * custoUnitarioCongelado` e soma tudo em `aplicacao.custoTotal`. Se o preço do insumo subir no mês seguinte, o passado financeiro nunca muda.
+2. **Prevalência da Maior Carência (entre todos os insumos da mistura):**
+   * Se na mesma aplicação (ou no mesmo dia) forem usados um defensivo de **10 dias** de carência e um adubo de **0 dias**, o talhão **não pode cair para 0 dias**!
+   * Regra: Para cada item da aplicação, calcula `dataFimCarencia` e compara a **maior** delas com `talhao.carenciaAte`. Só atualiza `talhao.carenciaAte` e `talhao.ultimoInsumoNome` se `insumo.carenciaDias > 0` **E** (`!talhao.carenciaAte` **OU** `maiorDataFimCarencia > new Date(talhao.carenciaAte)`).
 
 ---
 
@@ -168,3 +173,33 @@ No `acerto.service.js`, dentro de `db.transaction()`:
 3. Busca o `ultimoAcerto` do talhão e calcula `diasPassados`:
    * Se `diasPassados < 7` **E** `valorAcerto <= 10000` -> **Bloqueia (`400 Bad Request`)** com a mensagem: *"O intervalo mínimo entre acertos é de 7 dias. Acertos antecipados só são permitidos quando o valor ultrapassa R$ 10.000,00."*
    * Se `diasPassados >= 7` **OU** `valorAcerto > 10000` -> **Libera o Acerto!**
+
+---
+
+<a id="1-2-4-tipagem-banco"></a>
+### 1.2.4. Decisões de Tipagem no Banco (`ENUM`, `STRING` e `DECIMAL`)
+
+Decisões aplicadas diretamente nos `.model.js` para garantir integridade e compatibilidade com o SQLite:
+
+1. **O que é `ENUM` e por que ele foi a escolha correta (em vez de `ARRAY`, `STRING` ou `BOOLEAN`)?**
+   * **O que é:** `DataTypes.ENUM('OPCAO_A', 'OPCAO_B', ...)` restringe a coluna para aceitar **apenas 1 valor** dentre uma lista fechada de opções pré-definidas.
+   * **Por que não `DataTypes.ARRAY`?** Além de só funcionar no PostgreSQL (quebra no SQLite), `ARRAY` serve para guardar *vários itens dentro da mesma célula*, enquanto caixas de seleção (`<select>`) precisam salvar *uma única opção escolhida*.
+   * **Onde o `ENUM` resolveu problemas reais do projeto:**
+     * **`Usuario.perfil` (`'ADMIN'`, `'MEEIRO'`, `'AJUDANTE'`):** Um `BOOLEAN` (`isAdmin`) não conseguiria distinguir o `MEEIRO` (que vê o financeiro) do `AJUDANTE` (que só lança campo).
+     * **Fluxos e opções fixas:** `Colheita.tipoDestino` (`'MERCADO'`, `'ATACADO'`, `'POLPA'`), `Colheita.statusConferencia` (`'PENDENTE'`, `'APROVADA'`, `'REJEITADA'`), `AcertoFinanceiro.statusPagamento` (`'PENDENTE'`, `'PAGO'`) e `Insumo.statusCadastro` (`'CONFIRMADO'`, `'PENDENTE_CONFIRMACAO'`). Assim, o próprio banco impede gravações inválidas vindas de fora do front-end.
+
+2. **Por que `cpf` e `telefone` são `STRING` (e nunca `DECIMAL` ou `INTEGER`)?**
+   * Tipos numéricos apagam **zeros à esquerda** (como CPFs iniciados em `0` ou DDDs como `011`) e impedem armazenar formatação. Como `cpf` é usado no login, ele também recebe `unique: true`.
+
+3. **Por que `DECIMAL(10, 2)` em dinheiro e quantidades?**
+   * Garante precisão exata de **2 casas decimais (centavos)** em preços, custos congelados e acertos, evitando distorções de arredondamento de ponto flutuante (`FLOAT`) ou truncamento de `DECIMAL` sem escala.
+
+
+4. **Dados espelhados nos Models para funcionar Offline:**
+   * Alguns campos ficam salvos direto nas tabelas principais para o celular conseguir operar sem internet usando apenas o cache local (`localStorage`/IndexedDB):
+     * `Talhao.carenciaAte` e `Talhao.ultimoInsumoNome`: o app sabe na hora se o talhão está em carência e qual defensivo causou o bloqueio sem precisar consultar o histórico de `Aplicacao`.
+     * `Cultura` (`precoMercado`, `precoAtacado`, `precoPolpa`) e `Insumo` (`unidadeMedida`, `carenciaDias`): permitem calcular estimativas e alertas localmente no campo antes mesmo de sincronizar.
+
+5. **Lembrete de Segurança / LGPD — Dados Sensíveis Criptografados (`Usuario`):**
+   * **`senha`:** Sempre armazenada com hash **`bcrypt`** (irreversível) e ocultada no `toJSON()`.
+   * **`cpf` e `telefone`:** Por serem dados pessoais sensíveis (LGPD), devem ser **criptografados** no banco (e descriptografados apenas quando necessário no servidor). *(Atenção na hora de implementar o login por CPF: usar hash auxiliar ou criptografia determinística para conseguir buscar o usuário pelo CPF sem guardar o número em texto puro).*

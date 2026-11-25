@@ -7,17 +7,42 @@ const Insumo = db.define('Insumo', {
         primaryKey: true,
         autoIncrement: true
     },
-    nome: {
+    nomeInsumo: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
-    custoUnitario: {
-        type: DataTypes.FLOAT,
-        allowNull: false
+    tipoInsumo: {
+        type: DataTypes.ENUM('DEFENSIVO', 'FERTILIZANTE', 'BIOLOGICO', 'OUTRO'),
+        allowNull: false,
+        defaultValue: 'DEFENSIVO'
     },
     unidadeMedida: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.ENUM('L', 'ml', 'Kg', 'g', 'un'),
+        allowNull: false,
+        defaultValue: 'L'
+    },
+    // custo unitario que vira desconto no acerto financeiro (comeca 0 se for sugerido pelo meeiro)
+    custoUnitario: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0
+    },
+    carenciaDias: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+    // nota fiscal opcional em PDF ou imagem para dar transparencia ao custo descontado
+    urlNotaFiscal: {
+        type: DataTypes.STRING(500),
+        allowNull: true
+    },
+    // se o meeiro usar um insumo fora da lista, nasce PENDENTE_CONFIRMACAO ate o Admin preencher custo e bula
+    statusCadastro: {
+        type: DataTypes.ENUM('CONFIRMADO', 'PENDENTE_CONFIRMACAO'),
+        allowNull: false,
+        defaultValue: 'CONFIRMADO'
     }
 });
 
