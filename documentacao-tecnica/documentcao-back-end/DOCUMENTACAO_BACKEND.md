@@ -108,10 +108,17 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
 ---
 
 <a id="1-1-5-usuario-auth"></a>
-### 1.1.5. Módulos `usuario/` e `auth/` (Perfis Admin/Meeiro e JWT)
+### 1.1.5. Módulos `usuario/` e `auth/` (Perfis Admin/Meeiro/Ajudante, `mustChangePassword` e JWT)
 
-* **`usuario.model.js`:** Armazena `nome`, `username`, `email`, `cpf`, `telefone`, `senha` (hash bcrypt), `isAdmin` (`true` = Produtor/Admin, `false` = Meeiro/Parceiro) e `ativo` (`false` bloqueia o login preservando o histórico). Sobrescreve `toJSON()` para nunca retornar `senha` no JSON.
-* **`auth/`:** Segue exatamente a Biblioteca (`auth.router.js`, `auth.controller.js`, `auth.service.js`, `auth.middleware.js`, `refreshToken.model.js`, `logoutList.model.js`), fornecendo `verifyToken` e `verifyAdmin` (`403 Forbidden` para meeiros em rotas exclusivas de Admin).
+* **`usuario.model.js`:** Armazena `nome`, `email` (opcional, único), `telefone` (`STRING`), `cpf` (obrigatório, único — usado no login), `senha` (hash bcrypt), **`perfil` (`ENUM('ADMIN', 'MEEIRO', 'AJUDANTE')`, default `'MEEIRO'`)**, `ativo` (`false` bloqueia o login preservando o histórico) e **`mustChangePassword`** (`BOOLEAN`, default `true`). Sobrescreve `toJSON()` para nunca retornar `senha` no JSON.
+  * **Por que `perfil` (`ENUM`) em vez de `isAdmin` (`BOOLEAN`)?** Como existem 3 níveis de acesso (`ADMIN`, `MEEIRO` e `AJUDANTE`), um booleano não conseguiria separar o `MEEIRO` (que vê demonstrativos financeiros) do `AJUDANTE` (que só lança campo).
+* **`auth/` (`auth.router.js`, `auth.controller.js`, `auth.service.js`, `auth.middleware.js`, `refreshToken.model.js`, `logoutList.model.js`):**
+  * **Login flexível (`CPF` ou `E-mail`):** Aceita um único campo `identificador`; se contiver `@`, busca por e-mail; caso contrário, limpa a pontuação e busca por CPF.
+  * **Fluxo do primeiro acesso (`mustChangePassword`):** Quando o Admin pré-cadastra um meeiro com senha temporária, `mustChangePassword` nasce `true`. O `login` e o `/me` devolvem essa flag para o Front-end redirecionar o usuário à tela de definição de senha, que chama `PATCH /v1/auth/trocar-senha` (atualizando a senha com `bcrypt` e marcando `mustChangePassword = false`).
+  * **Por que existem dois middlewares de permissão (`verifyAdmin` e `verifyUser`) além do `verifyToken`?**
+    1. `verifyToken`: Garante que o usuário está logado (usado em rotas que todos os 3 perfis usam, como registrar aplicações e colheitas).
+    2. `verifyAdmin`: Exige `perfil === 'ADMIN'` (protege cadastros de culturas, preços, insumos, talhões, usuários, conferência de colheitas e criação de acertos).
+    3. `verifyUser`: Libera para `ADMIN` e `MEEIRO`, bloqueando `AJUDANTE` (`403 Forbidden`) — usado para proteger a consulta do **Acerto Financeiro / Demonstrativo**, já que o ajudante não pode visualizar valores financeiros da parceria.
 
 ---
 

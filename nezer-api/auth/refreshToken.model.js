@@ -1,7 +1,7 @@
 const db = require('../config/db');
 const { DataTypes } = require('sequelize');
 
-const RefreshToken = db.define('refresh_token', {
+const refreshToken = db.define('refresh_token', {
     token: {
         type: DataTypes.STRING(500),
         allowNull: false
@@ -20,4 +20,4 @@ const RefreshToken = db.define('refresh_token', {
     }
 });
 
-module.exports = RefreshToken;
+module.exports = refreshToken;

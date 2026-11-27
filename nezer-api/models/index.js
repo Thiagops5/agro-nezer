@@ -9,7 +9,7 @@ const Aplicacao = require('../aplicacao/aplicacao.model');
 const AplicacaoInsumo = require('../aplicacao/aplicacaoInsumo.model');
 const Colheita = require('../colheita/colheita.model');
 const AcertoFinanceiro = require('../acerto/acerto.model');
-const RefreshToken = require('../auth/refreshToken.model');
+const refreshToken = require('../auth/refreshToken.model');
 const LogoutList = require('../auth/logoutList.model');
 
 // 1. Cultura e Talhao (1:N) - Uma cultura pode estar plantada em varios talhoes
@@ -69,9 +69,9 @@ Aplicacao.belongsTo(AcertoFinanceiro, { foreignKey: 'acertoFinanceiroId' });
 AcertoFinanceiro.hasMany(Colheita, { foreignKey: 'acertoFinanceiroId' });
 Colheita.belongsTo(AcertoFinanceiro, { foreignKey: 'acertoFinanceiroId' });
 
-// 8. Autenticacao: Usuario e RefreshToken (1:N)
-Usuario.hasMany(RefreshToken, { foreignKey: 'usuarioId' });
-RefreshToken.belongsTo(Usuario, { foreignKey: 'usuarioId' });
+// 8. Autenticacao: Usuario e refreshToken (1:N)
+Usuario.hasMany(refreshToken, { foreignKey: 'usuarioId' });
+refreshToken.belongsTo(Usuario, { foreignKey: 'usuarioId' });
 
 module.exports = {
     db,
@@ -83,6 +83,6 @@ module.exports = {
     AplicacaoInsumo,
     Colheita,
     AcertoFinanceiro,
-    RefreshToken,
+    refreshToken,
     LogoutList
 };
