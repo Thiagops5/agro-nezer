@@ -18,12 +18,18 @@ const Insumo = db.define('Insumo', {
         defaultValue: 'DEFENSIVO'
     },
     unidadeMedida: {
-        type: DataTypes.ENUM('L', 'ml', 'Kg', 'g', 'un'),
+        type: DataTypes.ENUM('L', 'ml', 'Kg', 'g', 't', 'un'),
         allowNull: false,
         defaultValue: 'L'
     },
     // custo unitario que vira desconto no acerto financeiro (comeca 0 se for sugerido pelo meeiro)
     custoUnitario: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        defaultValue: 0
+    },
+    // quantidade atual disponivel no barracao (quando chega a 0 na aplicacao, desativa automaticamente)
+    quantidadeEstoque: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
         defaultValue: 0

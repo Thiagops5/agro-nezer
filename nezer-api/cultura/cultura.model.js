@@ -16,6 +16,12 @@ const Cultura = db.define('Cultura', {
         type: DataTypes.TEXT,
         allowNull: true
     },
+    // guarda o identificador opcional do icone escolhido no front (ex: 'goiaba', 'tomate', 'quiabo', 'limao', 'mamao')
+    icone: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: 'padrao'
+    },
     // os 3 precos por caixa definidos pelo Admin para cada canal de venda
     precoMercado: {
         type: DataTypes.DECIMAL(10, 2),

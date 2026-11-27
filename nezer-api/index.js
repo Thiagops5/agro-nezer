@@ -7,6 +7,7 @@ const cors = require('cors');
 const authRouter = require('./auth/auth.router');
 const usuarioRouter = require('./usuario/usuario.router');
 const talhaoRouter = require('./talhao/talhao.router');
+const insumoRouter = require('./insumo/insumo.router');
 const seedAdmin = require('./config/seed');
 
 const app = express();
@@ -19,6 +20,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/v1/auth', authRouter);
 app.use('/v1/usuarios', usuarioRouter);
 app.use('/v1/talhoes', talhaoRouter);
+app.use('/v1/insumos', insumoRouter);
 
 // sincroniza todas as tabelas, cria o primeiro admin (seed) e so entao sobe o servidor
 db.sync()

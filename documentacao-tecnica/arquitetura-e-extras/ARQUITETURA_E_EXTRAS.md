@@ -38,11 +38,11 @@ erDiagram
 
 | Módulo | Rota | Permissão | Descrição |
 | :--- | :--- | :---: | :--- |
-| **Auth** | `POST /v1/auth/login` / `refresh` / `logout` | Pública / Logado | Login JWT, renovação de sessão e logout na `LogoutList`. |
-| **Usuários** | `GET`, `POST`, `PUT`, `DELETE /v1/usuarios` | Admin | Gestão de meeiros e ativação/desativação (`ativo`). |
-| **Culturas** | `GET /v1/culturas` \| `POST`, `PUT`, `DELETE` | Logado \| Admin | Cadastro de culturas e preços (`Mercado`, `Atacado`, `Polpa`). |
-| **Insumos** | `GET /v1/insumos` \| `POST`, `PUT`, `DELETE` | Logado \| Admin | Cadastro de insumos, custo unitário e `carenciaDias`. |
-| **Talhões** | `GET /v1/talhoes` \| `POST`, `PUT`, `DELETE` | Logado \| Admin | Quadras de plantio, `percentualMeeiro` e status de carência. |
+| **Auth** | `POST /v1/auth/login` / `refresh` / `logout` \| `GET/PUT /me` \| `PATCH /trocar-senha` | Pública / Logado | Login (CPF/E-mail), edição do próprio perfil e troca de senha no 1º acesso. |
+| **Usuários** | `GET`, `GET /arquivados`, `POST`, `PUT`, `PATCH /:id/ativo`, `DELETE /v1/usuarios` | Admin \| Meeiro (só Ajudante no `POST`) | Gestão de perfis (`ADMIN`, `MEEIRO`, `AJUDANTE`) e arquivamento seguro. |
+| **Culturas** | `GET /v1/culturas` \| `POST`, `PUT`, `DELETE` | Logado \| Admin | Cadastro de culturas, ícone e preços (`Mercado`, `Atacado`, `Polpa`). |
+| **Insumos** | `GET /v1/insumos` (`/pendentes`, `/esgotados`) \| `POST`, `PUT`, `PATCH /:id/ativo`, `DELETE` | Logado \| Admin | Catálogo, estoque automático, conversão de unidades e confirmação de custo. |
+| **Talhões** | `GET /v1/talhoes` \| `POST`, `PUT`, `PATCH /:id/desvincular`, `DELETE` | Logado (filtrado) \| Admin | Quadras de plantio, `ajudantes`, desvinculação e status de carência. |
 | **Aplicações** | `GET`, `POST /v1/aplicacoes` | Logado | Registro de aplicação com foto, custo congelado e atualização de carência. |
 | **Colheitas** | `GET`, `POST /v1/colheitas` \| `PATCH /:id/conferir` | Logado \| Admin | Registro de colheita com Termo de Ciência e conferência pelo Admin. |
 | **Acertos** | `GET /v1/acertos` \| `POST` \| `PATCH /:id/pagar` | Logado \| Admin | Fechamento do Acerto a Meia (7 dias ou > R$ 10k) e anexo PIX. |

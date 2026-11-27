@@ -13,7 +13,7 @@ const AplicacaoInsumo = db.define('AplicacaoInsumo', {
         allowNull: false
     },
     unMedida: {
-        type: DataTypes.ENUM('L', 'ml', 'Kg', 'g', 'un'),
+        type: DataTypes.ENUM('L', 'ml', 'Kg', 'g', 't', 'un'),
         allowNull: false
     },
     // congela o custo unitario do insumo no momento da aplicacao (ou apos confirmacao do Admin)

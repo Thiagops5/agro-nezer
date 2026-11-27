@@ -76,14 +76,16 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
 ---
 
 <a id="1-1-2-cultura-insumo"></a>
-### 1.1.2. Módulos `cultura/` e `insumo/` (Preços Fixados e Bula Sanitária)
+### 1.1.2. Módulos `cultura/` e `insumo/` (Preços Fixados, Ícone e Bula Sanitária)
 
-* **`cultura.model.js`:** Possui `nomeCultura` (único) e os **3 preços fixados pelo Admin** por canal de escoamento:
+* **`cultura.model.js`:** Possui `nomeCultura` (único), `descricao`, **`icone`** (`STRING`, default `'padrao'` — guarda apenas o identificador do SVG da galeria do front-end, ex: `'goiaba'`, `'tomate'`, mantendo o banco leve e seguro) e os **3 preços fixados pelo Admin** por canal de escoamento:
   * `precoMercado` (fruta de mesa / primeira linha, maior valor);
   * `precoAtacado` (CEASA / grandes volumes);
   * `precoPolpa` (fruta madura para indústria / suco / doce).
   * O meeiro nunca digita valor em R$ na colheita; ele escolhe o destino e a API puxa o preço da Cultura.
-* **`insumo.model.js`:** Possui `nomeInsumo` (único), `tipoInsumo` (`DEFENSIVO`, `FERTILIZANTE`, `BIOLOGICO`, `OUTRO`), `unidadeMedida` (`L`, `ml`, `Kg`, `g`, `un`), `custoUnitario` (em R$ por 1 unidade da `unidadeMedida`, que será usado nos descontos do Acerto Financeiro), `carenciaDias` (dias de carência da bula oficial), **`urlNotaFiscal`** (caminho opcional da Nota Fiscal em **PDF ou imagem** enviada via `multer` para transparência do custo), **`statusCadastro`** (`ENUM('CONFIRMADO', 'PENDENTE_CONFIRMACAO')` — permitindo que insumos sugeridos pelo meeiro na hora fiquem aguardando validação e preenchimento de preço/carência pelo Admin) e **`ativo`** (`BOOLEAN`, default `true` — quando o produto acaba no estoque, o Admin marca como `false` para ocultá-lo de novas aplicações sem apagar o histórico).
+* **`insumo.model.js`:** Possui `nomeInsumo` (único), `tipoInsumo` (`DEFENSIVO`, `FERTILIZANTE`, `BIOLOGICO`, `OUTRO`), `unidadeMedida` (`L`, `ml`, `Kg`, `g`, `t`, `un`), `custoUnitario` (em R$ por **1 unidade** da `unidadeMedida`, usado nos descontos do Acerto Financeiro), **`quantidadeEstoque`** (`DECIMAL(10, 2)`), `carenciaDias` (dias de carência da bula oficial), **`urlNotaFiscal`** (caminho opcional da Nota Fiscal em **PDF ou imagem** enviada via `multer` para transparência do custo), **`statusCadastro`** (`ENUM('CONFIRMADO', 'PENDENTE_CONFIRMACAO')`) e **`ativo`** (`BOOLEAN` — quando `quantidadeEstoque` chega a `0` após as aplicações, `ativo` muda automaticamente para `false`, sumindo da tela de **Aplicação** e passando a aparecer apenas na tela de **Registrar Praga** para que o meeiro possa pedir reposição; insumos que ainda estão em estoque ficam bloqueados de serem pedidos novamente).
+  * **Conversão Automática de Unidades (`config/unidades.js`):** Se o insumo está cadastrado em `L` (ex: 5 L no estoque a R$ 200,00/L) e o meeiro aplica `500 ml`, o sistema converte `500 ml -> 0.5 L` automaticamente antes de descontar do estoque (`4.5 L`) e calcular o custo da aplicação (`0.5 * 200 = R$ 100,00`), suportando Volume (`L <-> ml`), Massa (`t <-> Kg <-> g`) e `un`.
+  * **Cálculo Automático e Reativação Segura:** Tanto no cadastro (`POST`) quanto na edição/reativação (`PUT` ou `PATCH /:id/ativo`), o Admin pode informar `custoUnitario` direto ou `valorTotalCompra` (que divide automaticamente pela `quantidadeEstoque`). Para reativar um insumo esgotado, é **obrigatório** informar `quantidadeEstoque > 0` e confirmar o `custoUnitario`.
 
 ---
 
