@@ -43,6 +43,12 @@ const Insumo = db.define('Insumo', {
         type: DataTypes.ENUM('CONFIRMADO', 'PENDENTE_CONFIRMACAO'),
         allowNull: false,
         defaultValue: 'CONFIRMADO'
+    },
+    // quando o insumo acaba no estoque, fica ativo = false (oculto para novas aplicacoes, mas preserva o historico)
+    ativo: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
     }
 });
 

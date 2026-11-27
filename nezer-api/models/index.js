@@ -9,6 +9,8 @@ const Aplicacao = require('../aplicacao/aplicacao.model');
 const AplicacaoInsumo = require('../aplicacao/aplicacaoInsumo.model');
 const Colheita = require('../colheita/colheita.model');
 const AcertoFinanceiro = require('../acerto/acerto.model');
+const Ocorrencia = require('../ocorrencia/ocorrencia.model');
+const Notificacao = require('../notificacao/notificacao.model');
 const refreshToken = require('../auth/refreshToken.model');
 const LogoutList = require('../auth/logoutList.model');
 
@@ -69,7 +71,21 @@ Aplicacao.belongsTo(AcertoFinanceiro, { foreignKey: 'acertoFinanceiroId' });
 AcertoFinanceiro.hasMany(Colheita, { foreignKey: 'acertoFinanceiroId' });
 Colheita.belongsTo(AcertoFinanceiro, { foreignKey: 'acertoFinanceiroId' });
 
-// 8. Autenticacao: Usuario e refreshToken (1:N)
+// 8. Ocorrencia de Pragas e Pedido de Insumos (1:N com Talhao, Usuario e Insumo opcional)
+Talhao.hasMany(Ocorrencia, { foreignKey: 'talhaoId' });
+Ocorrencia.belongsTo(Talhao, { foreignKey: 'talhaoId' });
+
+Usuario.hasMany(Ocorrencia, { foreignKey: 'usuarioId' });
+Ocorrencia.belongsTo(Usuario, { foreignKey: 'usuarioId' });
+
+Insumo.hasMany(Ocorrencia, { foreignKey: 'insumoId' });
+Ocorrencia.belongsTo(Insumo, { foreignKey: 'insumoId' });
+
+// 9. Notificacoes: caixa de entrada unica de cada Usuario (1:N)
+Usuario.hasMany(Notificacao, { foreignKey: 'usuarioId' });
+Notificacao.belongsTo(Usuario, { foreignKey: 'usuarioId' });
+
+// 10. Autenticacao: Usuario e refreshToken (1:N)
 Usuario.hasMany(refreshToken, { foreignKey: 'usuarioId' });
 refreshToken.belongsTo(Usuario, { foreignKey: 'usuarioId' });
 
@@ -83,6 +99,8 @@ module.exports = {
     AplicacaoInsumo,
     Colheita,
     AcertoFinanceiro,
+    Ocorrencia,
+    Notificacao,
     refreshToken,
     LogoutList
 };

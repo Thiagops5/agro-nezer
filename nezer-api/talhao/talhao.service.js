@@ -52,6 +52,21 @@ const talhaoService = {
         return talhao;
     },
 
+    // Desvincula o meeiro responsavel (ou ajudantes) deste talhao sem apagar o talhao nem o usuario
+    desvincularMeeiro: async (id, usuarioId = null) => {
+        const talhao = await Talhao.findByPk(id);
+        if (!talhao) throw new Error('Talhão não encontrado');
+
+        if (!usuarioId || talhao.usuarioId === Number(usuarioId)) {
+            await talhao.update({ usuarioId: null });
+        }
+        if (usuarioId) {
+            await talhao.removeAjudante(Number(usuarioId));
+        }
+
+        return await talhaoService.findById(id);
+    },
+
     delete: async (id) => {
         const talhao = await Talhao.findByPk(id);
         if (!talhao) throw new Error('Talhão não encontrado');

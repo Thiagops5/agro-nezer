@@ -13,6 +13,7 @@
   - [1.1.3. Módulos `aplicacao/` e `colheita/` (Manejo, Fotos e Conferência)](#1-1-3-aplicacao-colheita)
   - [1.1.4. Módulo `acerto/` (Fechamento "Acerto a Meia" e PIX)](#1-1-4-acerto)
   - [1.1.5. Módulos `usuario/` e `auth/` (Perfis Admin/Meeiro e JWT)](#1-1-5-usuario-auth)
+  - [1.1.6. Módulos `ocorrencia/` e `notificacao/` (Pragas, Pedidos e Caixa de Entrada Única)](#1-1-6-ocorrencia-notificacao)
 - [1.2. Lógicas Complexas de Negócio](#1-2-logicas)
   - [1.2.1. Integridade Referencial e Bloqueio de Exclusão (`409 Conflict`)](#1-2-1-bloqueio-409)
   - [1.2.2. Prevalência da Maior Carência e Custo Congelado (`db.transaction`)](#1-2-2-carencia-custo)
@@ -82,7 +83,7 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
   * `precoAtacado` (CEASA / grandes volumes);
   * `precoPolpa` (fruta madura para indústria / suco / doce).
   * O meeiro nunca digita valor em R$ na colheita; ele escolhe o destino e a API puxa o preço da Cultura.
-* **`insumo.model.js`:** Possui `nomeInsumo` (único), `tipoInsumo` (`DEFENSIVO`, `FERTILIZANTE`, `BIOLOGICO`, `OUTRO`), `unidadeMedida` (`L`, `ml`, `Kg`, `g`, `un`), `custoUnitario` (em R$ por 1 unidade da `unidadeMedida`, que será usado nos descontos do Acerto Financeiro), `carenciaDias` (dias de carência da bula oficial), **`urlNotaFiscal`** (caminho opcional da Nota Fiscal em **PDF ou imagem** enviada via `multer` para transparência do custo) e **`statusCadastro`** (`ENUM('CONFIRMADO', 'PENDENTE_CONFIRMACAO')` — permitindo que insumos sugeridos pelo meeiro na hora fiquem aguardando validação e preenchimento de preço/carência pelo Admin).
+* **`insumo.model.js`:** Possui `nomeInsumo` (único), `tipoInsumo` (`DEFENSIVO`, `FERTILIZANTE`, `BIOLOGICO`, `OUTRO`), `unidadeMedida` (`L`, `ml`, `Kg`, `g`, `un`), `custoUnitario` (em R$ por 1 unidade da `unidadeMedida`, que será usado nos descontos do Acerto Financeiro), `carenciaDias` (dias de carência da bula oficial), **`urlNotaFiscal`** (caminho opcional da Nota Fiscal em **PDF ou imagem** enviada via `multer` para transparência do custo), **`statusCadastro`** (`ENUM('CONFIRMADO', 'PENDENTE_CONFIRMACAO')` — permitindo que insumos sugeridos pelo meeiro na hora fiquem aguardando validação e preenchimento de preço/carência pelo Admin) e **`ativo`** (`BOOLEAN`, default `true` — quando o produto acaba no estoque, o Admin marca como `false` para ocultá-lo de novas aplicações sem apagar o histórico).
 
 ---
 
@@ -122,6 +123,18 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
 
 ---
 
+<a id="1-1-6-ocorrencia-notificacao"></a>
+### 1.1.6. Módulos `ocorrencia/` e `notificacao/` (Pragas, Pedidos de Insumo e Mensageria)
+
+Seguindo **Clean Code (Princípio da Responsabilidade Única)**, separamos o registro agrícola de campo da caixa de entrada de avisos do usuário:
+
+* **`ocorrencia.model.js` (Domínio de Campo):** Registra pragas ou doenças encontradas no talhão (`dataOcorrencia`, `descricao`, `urlFoto`, `insumoSugerido`, `status`: `ENUM('ABERTA', 'INSUMO_SOLICITADO', 'INSUMO_DISPONIVEL', 'RESOLVIDA')`, `observacaoAdmin`) ligadas a `talhaoId`, `usuarioId` e `insumoId` (opcional). O meeiro pode pedir um insumo já existente **ou** sugerir um nome personalizado (`insumoSugerido`); quando o produto chega, o Admin realiza o cadastro completo (custo e carência da bula) e confirma que chegou — assim o meeiro já seleciona o insumo pronto na hora de aplicar sem preencher bula.
+* **`notificacao.model.js` (Caixa de Entrada Única):** Centraliza os avisos para **Meeiros** (`COLHEITA_APROVADA`, `COLHEITA_AJUSTADA`, `COLHEITA_REJEITADA`, `INSUMO_DISPONIVEL`, `INSUMO_CONFIRMADO`, `ACERTO_GERADO`, `ACERTO_PAGO`) e para o **Administrador** (`COLHEITA_REGISTRADA`, `APLICACAO_REGISTRADA`, `INSUMO_PENDENTE`, `PRAGA_REPORTADA`, `AJUDANTE_REGISTRADO`), com `lida`, `referenciaTipo`/`referenciaId` e `dadosExtras` (`JSON`, ex: `{ antes: 40, depois: 38 }`).
+  * **Diferença entre `INSUMO_DISPONIVEL` e `INSUMO_CONFIRMADO`:** `INSUMO_DISPONIVEL` nasce na `Ocorrencia` (o Admin comprou/separou o insumo pedido para uma praga e avisa que chegou no barracão); já `INSUMO_CONFIRMADO` nasce no `Insumo` (o meeiro já havia aplicado um insumo personalizado fora da lista, e o Admin validou o cadastro preenchendo custo e carência da bula).
+  * **Zero duplicação:** O `notificacao.service.js` expõe uma função única `notificar(...)` que é chamada pelos demais services (`colheita`, `aplicacao`, `ocorrencia`, `insumo`, `acerto`, `usuario`), mantendo o sininho do front-end conectado a um único endpoint (`/v1/notificacoes`).
+
+---
+
 <a id="1-2-logicas"></a>
 ## 1.2. Lógicas Complexas de Negócio
 
@@ -155,8 +168,14 @@ delete: async (id) => {
 ```
 E o `talhao.controller.js` intercepta `'possui registros vinculados'` e devolve **`HTTP 409 Conflict`**. O mesmo padrão de trava `409` se aplica a:
 * **`Cultura`:** Bloqueia se `Talhao.count({ where: { culturaId: id } }) > 0`.
-* **`Insumo`:** Bloqueia se `Aplicacao.count({ where: { insumoId: id } }) > 0`.
-* **`Usuario`:** Bloqueia se possuir `Talhao`, `Aplicacao`, `Colheita` ou `AcertoFinanceiro` vinculados (para encerrar parceria, usa-se `ativo = false`).
+* **`Insumo`:** Bloqueia se `AplicacaoInsumo.count({ where: { insumoId: id } }) > 0`.
+* **`Usuario` (Soft Delete / Arquivamento via `ativo`):** Só bloqueia (`409`) se o usuário possuir `AcertoFinanceiro` com `statusPagamento: 'PENDENTE'` ou `Colheita`/`Aplicacao` em aberto (`acertoFinanceiroId: null`). Se estiver tudo quitado, `toggleAtivo(id, false)` **desvincula os talhões automaticamente**, revoga os Refresh Tokens e oculta o usuário (`ativo = false`) na aba de Arquivados — podendo ser reativado depois com o mesmo login e senha (`ativo = true`).
+
+> **Desvinculação manual de Talhão (`PATCH /v1/talhoes/:id/desvincular`):** O Admin também pode desvincular um meeiro de um talhão específico (sem arquivar o meeiro e sem apagar o talhão). Quando um talhão fica sem meeiro (`usuarioId = null`), ele fica sob gestão direta do Administrador (sem necessidade de Acerto a Meia), mantendo o registro de colheitas/insumos para controle próprio e futuro export em CSV (ex: Imposto de Renda).
+
+> **Evoluções Futuras (Pós-MVP):**
+> * **Exportação em CSV:** Geração de relatórios `.csv` filtrados por talhão, meeiro específico ou geral (todos os meeiros) por ano, mês ou período de datas.
+> * **Armazenamento em Nuvem (Cloudflare R2) + Compressão:** Migração do `uploads/` local para **Cloudflare R2** (10 GB gratuitos no plano free, gerando links públicos S3-compatíveis) combinada com compressão de imagens para **WebP** no front-end (`<canvas>`) ou no back-end (`sharp`).
 
 ---
 
@@ -207,6 +226,6 @@ Decisões aplicadas diretamente nos `.model.js` para garantir integridade e comp
      * `Talhao.carenciaAte` e `Talhao.ultimoInsumoNome`: o app sabe na hora se o talhão está em carência e qual defensivo causou o bloqueio sem precisar consultar o histórico de `Aplicacao`.
      * `Cultura` (`precoMercado`, `precoAtacado`, `precoPolpa`) e `Insumo` (`unidadeMedida`, `carenciaDias`): permitem calcular estimativas e alertas localmente no campo antes mesmo de sincronizar.
 
-5. **Lembrete de Segurança / LGPD — Dados Sensíveis Criptografados (`Usuario`):**
-   * **`senha`:** Sempre armazenada com hash **`bcrypt`** (irreversível) e ocultada no `toJSON()`.
-   * **`cpf` e `telefone`:** Por serem dados pessoais sensíveis (LGPD), devem ser **criptografados** no banco (e descriptografados apenas quando necessário no servidor). *(Atenção na hora de implementar o login por CPF: usar hash auxiliar ou criptografia determinística para conseguir buscar o usuário pelo CPF sem guardar o número em texto puro).*
+5. **Segurança / LGPD — `bcrypt` vs. Criptografia Reversível (`config/crypto.js`):**
+   * **`senha` (`bcrypt` — Hash irreversível):** Usa `bcrypt.hash(senha, 10)` ao criar/trocar senha e `bcrypt.compare(digitada, hashDoBanco)` no login. O `bcrypt` não tem volta e gera um *salt* diferente a cada execução (o fator `10` fica embutido dentro do próprio hash, por isso o `compare` não precisa recebê-lo). Nunca é descriptografada e nunca sai no `toJSON()`.
+   * **`cpf` e `telefone` (`AES-256-CBC` em `config/crypto.js` — Criptografia reversível):** Por serem dados pessoais sensíveis (LGPD) que ainda precisam ser **buscados no login** (`findByCpf`) e **exibidos** no Demonstrativo/contato, não podemos usar `bcrypt`. Usamos criptografia simétrica com chave `CRYPTO_SECRET` do `.env`, permitindo buscar o CPF cifrado no SQLite e descriptografar apenas quando necessário no servidor.

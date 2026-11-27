@@ -8,6 +8,7 @@ router.post('/', authMiddleware.verifyToken, authMiddleware.verifyAdmin, talhaoC
 router.get('/', authMiddleware.verifyToken, talhaoController.findAll);
 router.get('/:id', authMiddleware.verifyToken, talhaoController.findById);
 router.put('/:id', authMiddleware.verifyToken, authMiddleware.verifyAdmin, talhaoController.update);
+router.patch('/:id/desvincular', authMiddleware.verifyToken, authMiddleware.verifyAdmin, talhaoController.desvincularMeeiro);
 router.delete('/:id', authMiddleware.verifyToken, authMiddleware.verifyAdmin, talhaoController.delete);
 
 module.exports = router;

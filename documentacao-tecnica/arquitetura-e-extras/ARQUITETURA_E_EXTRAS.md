@@ -25,6 +25,11 @@ erDiagram
 
     ACERTO_FINANCEIRO |o--o{ APLICACAO : "desconta (acertoFinanceiroId)"
     ACERTO_FINANCEIRO |o--o{ COLHEITA : "contabiliza (acertoFinanceiroId)"
+
+    TALHAO ||--o{ OCORRENCIA : "registra praga (talhaoId)"
+    USUARIO ||--o{ OCORRENCIA : "reporta (usuarioId)"
+    INSUMO |o--o{ OCORRENCIA : "atende pedido (insumoId)"
+    USUARIO ||--o{ NOTIFICACAO : "recebe (usuarioId)"
 ```
 
 ---
@@ -41,6 +46,8 @@ erDiagram
 | **Aplicações** | `GET`, `POST /v1/aplicacoes` | Logado | Registro de aplicação com foto, custo congelado e atualização de carência. |
 | **Colheitas** | `GET`, `POST /v1/colheitas` \| `PATCH /:id/conferir` | Logado \| Admin | Registro de colheita com Termo de Ciência e conferência pelo Admin. |
 | **Acertos** | `GET /v1/acertos` \| `POST` \| `PATCH /:id/pagar` | Logado \| Admin | Fechamento do Acerto a Meia (7 dias ou > R$ 10k) e anexo PIX. |
+| **Ocorrências** | `GET`, `POST /v1/ocorrencias` \| `PATCH /:id` | Logado \| Admin | Registro de pragas com foto/pedido de insumo e aviso de chegada. |
+| **Notificações** | `GET /v1/notificacoes` \| `PATCH /:id/lida` | Logado | Caixa de entrada única de avisos do usuário. |
 | **Relatórios** | `GET /v1/relatorios/dashboard` | Logado | Indicadores consolidados para os cards do Dashboard. |
 
 ---

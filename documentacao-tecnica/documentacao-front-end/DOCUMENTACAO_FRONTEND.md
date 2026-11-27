@@ -56,9 +56,9 @@ Cada funcionalidade dentro de `app/dashboard/<modulo>/` separa claramente leitur
 <a id="2-1-2-sessao-rotas"></a>
 ### 2.1.2. Controle de Sessão, Refresh Token e Proteção de Rotas (`proxy.ts`)
 
-* **`lib/session.ts`:** Gerencia os cookies `httpOnly` com `accessToken` e `refreshToken` e extrai os dados da sessão (`id`, `username`, `isAdmin`).
+* **`lib/session.ts`:** Gerencia os cookies `httpOnly` com `accessToken` e `refreshToken` e extrai os dados da sessão (`id`, `nome`, `identificador`, `perfil`).
 * **`lib/refresh.ts`:** Se a API responder `401` por expiração do token de acesso, renova o token automaticamente usando `/v1/auth/refresh` sem deslogar o meeiro no meio do campo.
-* **`proxy.ts`:** Bloqueia acesso anônimo a `/dashboard/*` e impede que um meeiro (`isAdmin: false`) acesse rotas exclusivas do produtor (`/dashboard/culturas`, `/dashboard/insumos`, `/dashboard/meeiros`).
+* **`proxy.ts`:** Bloqueia acesso anônimo a `/dashboard/*`, impede que não-admins (`perfil !== 'ADMIN'`) acessem rotas exclusivas do produtor (`/dashboard/culturas`, `/dashboard/insumos`, `/dashboard/meeiros`) e bloqueia o acesso de `AJUDANTE` à rota financeira (`/dashboard/acertos`).
 
 ---
 

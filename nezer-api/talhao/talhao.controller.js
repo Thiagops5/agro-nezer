@@ -43,6 +43,19 @@ const talhaoController = {
         }
     },
 
+    desvincularMeeiro: async (req, res) => {
+        try {
+            const { usuarioId } = req.body || {};
+            const talhao = await talhaoService.desvincularMeeiro(req.params.id, usuarioId);
+            res.json(talhao);
+        } catch (error) {
+            if (error.message.includes('não encontrado')) {
+                return res.status(404).json({ error: error.message });
+            }
+            res.status(400).json({ error: error.message });
+        }
+    },
+
     delete: async (req, res) => {
         try {
             await talhaoService.delete(req.params.id);
