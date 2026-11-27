@@ -119,7 +119,7 @@ O projeto nasceu da vivência real no campo com **Goiaba, Tomate e Quiabo** (cul
   * **Por que existem dois middlewares de permissão (`verifyAdmin` e `verifyUser`) além do `verifyToken`?**
     1. `verifyToken`: Garante que o usuário está logado (usado em rotas que todos os 3 perfis usam, como registrar aplicações e colheitas).
     2. `verifyAdmin`: Exige `perfil === 'ADMIN'` (protege cadastros de culturas, preços, insumos, talhões, usuários, conferência de colheitas e criação de acertos).
-    3. `verifyUser`: Libera para `ADMIN` e `MEEIRO`, bloqueando `AJUDANTE` (`403 Forbidden`) — usado para proteger a consulta do **Acerto Financeiro / Demonstrativo**, já que o ajudante não pode visualizar valores financeiros da parceria.
+    3. `verifyUser`: Libera para `ADMIN` e `MEEIRO`, bloqueando `AJUDANTE` (`403 Forbidden`) — usado para proteger a consulta do **Acerto Financeiro / Demonstrativo** (já que o ajudante não vê valores financeiros) e para permitir que o `MEEIRO` também cadastre o próprio `AJUDANTE` em `POST /v1/usuarios` (travado no controller para aceitar somente `perfil: 'AJUDANTE'`).
 
 ---
 

@@ -31,6 +31,15 @@ const authController = {
         }
     },
 
+    async atualizarPerfil(req, res) {
+        try {
+            const usuarioAtualizado = await authService.atualizarPerfil(req.usuario.id, req.body);
+            res.json(usuarioAtualizado);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
     async trocarSenha(req, res) {
         try {
             const { senhaAtual, novaSenha } = req.body;

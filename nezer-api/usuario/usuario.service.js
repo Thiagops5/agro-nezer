@@ -21,21 +21,53 @@ function descriptografarUsuario(usuario) {
 }
 
 const usuarioService = {
-    create: async (usuarioData) => {
+    create: async (usuarioData, usuarioLogado = null) => {
+        const t = await db.transaction();
         try {
-            usuarioData.senha = await bcrypt.hash(usuarioData.senha, 10);
-            usuarioData.cpf = criptografar(usuarioData.cpf.replace(/\D/g, ''));
+            const { talhaoIds, ...dadosUsuario } = usuarioData;
 
-            if (usuarioData.email) {
-                usuarioData.email = usuarioData.email.trim().toLowerCase();
+            dadosUsuario.senha = await bcrypt.hash(dadosUsuario.senha, 10);
+            dadosUsuario.cpf = criptografar(dadosUsuario.cpf.replace(/\D/g, ''));
+
+            if (dadosUsuario.email) {
+                dadosUsuario.email = dadosUsuario.email.trim().toLowerCase();
             }
-            if (usuarioData.telefone) {
-                usuarioData.telefone = criptografar(usuarioData.telefone.replace(/\D/g, ''));
+            if (dadosUsuario.telefone) {
+                dadosUsuario.telefone = criptografar(dadosUsuario.telefone.replace(/\D/g, ''));
             }
 
-            const novoUsuario = await Usuario.create(usuarioData);
+            const novoUsuario = await Usuario.create(dadosUsuario, { transaction: t });
+
+            // Se quem criou foi um MEEIRO, vincula o AJUDANTE somente aos talhoes dele (padrao: todos os seus talhoes)
+            if (usuarioLogado && usuarioLogado.perfil === 'MEEIRO') {
+                let talhoesParaVincular;
+                if (Array.isArray(talhaoIds) && talhaoIds.length > 0) {
+                    talhoesParaVincular = await Talhao.findAll({
+                        where: { id: talhaoIds, usuarioId: usuarioLogado.id },
+                        transaction: t
+                    });
+                    if (talhoesParaVincular.length !== talhaoIds.length) {
+                        throw new Error('Você só pode vincular ajudantes aos seus próprios talhões.');
+                    }
+                } else {
+                    talhoesParaVincular = await Talhao.findAll({
+                        where: { usuarioId: usuarioLogado.id },
+                        transaction: t
+                    });
+                }
+
+                if (talhoesParaVincular.length > 0) {
+                    await novoUsuario.setTalhoesAjudados(talhoesParaVincular, { transaction: t });
+                }
+            } else if (novoUsuario.perfil === 'AJUDANTE' && Array.isArray(talhaoIds) && talhaoIds.length > 0) {
+                // Admin criando ajudante ja passando a lista de talhoes
+                await novoUsuario.setTalhoesAjudados(talhaoIds, { transaction: t });
+            }
+
+            await t.commit();
             return descriptografarUsuario(novoUsuario);
         } catch (error) {
+            await t.rollback();
             throw new Error('Erro ao criar usuário: ' + error.message);
         }
     },

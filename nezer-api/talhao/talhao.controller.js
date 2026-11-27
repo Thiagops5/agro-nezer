@@ -12,7 +12,7 @@ const talhaoController = {
 
     findAll: async (req, res) => {
         try {
-            const talhoes = await talhaoService.findAll();
+            const talhoes = await talhaoService.findAll(req.usuario);
             res.json(talhoes);
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -21,12 +21,15 @@ const talhaoController = {
 
     findById: async (req, res) => {
         try {
-            const talhao = await talhaoService.findById(req.params.id);
+            const talhao = await talhaoService.findById(req.params.id, req.usuario);
             if (!talhao) {
                 return res.status(404).json({ error: 'Talhão não encontrado' });
             }
             res.json(talhao);
         } catch (error) {
+            if (error.message.includes('Acesso negado')) {
+                return res.status(403).json({ error: error.message });
+            }
             res.status(500).json({ error: error.message });
         }
     },

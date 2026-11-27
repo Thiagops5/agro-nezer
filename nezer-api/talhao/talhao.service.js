@@ -17,25 +17,58 @@ const talhaoService = {
         }
     },
 
-    findAll: async () => {
-        // traz a cultura, o meeiro responsavel e os meeiros ajudantes vinculados ao talhao
-        return await Talhao.findAll({
-            include: [
-                { model: Cultura },
-                { model: Usuario },
-                { model: Usuario, as: 'ajudantes', through: { attributes: [] } }
-            ]
-        });
+    findAll: async (usuarioLogado = null) => {
+        const where = {};
+        const include = [
+            { model: Cultura },
+            { model: Usuario, attributes: ['id', 'nome', 'perfil'] },
+            {
+                model: Usuario,
+                as: 'ajudantes',
+                attributes: ['id', 'nome', 'perfil'],
+                through: { attributes: [] }
+            }
+        ];
+
+        // MEEIRO so ve os proprios talhoes; AJUDANTE so ve os talhoes em que esta vinculado
+        if (usuarioLogado && usuarioLogado.perfil === 'MEEIRO') {
+            where.usuarioId = usuarioLogado.id;
+        } else if (usuarioLogado && usuarioLogado.perfil === 'AJUDANTE') {
+            include[2].where = { id: usuarioLogado.id };
+            include[2].required = true;
+        }
+
+        return await Talhao.findAll({ where, include });
     },
 
-    findById: async (id) => {
-        return await Talhao.findByPk(id, {
+    findById: async (id, usuarioLogado = null) => {
+        const talhao = await Talhao.findByPk(id, {
             include: [
                 { model: Cultura },
-                { model: Usuario },
-                { model: Usuario, as: 'ajudantes', through: { attributes: [] } }
+                { model: Usuario, attributes: ['id', 'nome', 'perfil'] },
+                {
+                    model: Usuario,
+                    as: 'ajudantes',
+                    attributes: ['id', 'nome', 'perfil'],
+                    through: { attributes: [] }
+                }
             ]
         });
+
+        if (!talhao) return null;
+
+        // Bloqueia acesso se o MEEIRO ou AJUDANTE tentar abrir talhao de outro parceiro pela URL
+        if (usuarioLogado && usuarioLogado.perfil === 'MEEIRO' && talhao.usuarioId !== usuarioLogado.id) {
+            throw new Error('Acesso negado: este talhão pertence a outro meeiro.');
+        }
+        if (usuarioLogado && usuarioLogado.perfil === 'AJUDANTE') {
+            const ehAjudante = talhao.ajudantes?.some((a) => a.id === usuarioLogado.id);
+            if (!ehAjudante) {
+                throw new Error('Acesso negado: você não está vinculado a este talhão.');
+            }
+        }
+
+        return talhao;
     },
 
     update: async (id, talhaoData) => {

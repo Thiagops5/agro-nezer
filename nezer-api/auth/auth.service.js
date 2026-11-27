@@ -84,8 +84,8 @@ const authService = {
         await storedToken.save();
 
         const usuario = await usuarioService.findById(storedToken.usuarioId);
-        if (!usuario) {
-            throw new Error('Usuário inválido');
+        if (!usuario || !usuario.ativo) {
+            throw new Error('Usuário inválido ou desativado');
         }
 
         const newAccessToken = jwt.sign(
@@ -134,6 +134,14 @@ const authService = {
             perfil: usuario.perfil,
             mustChangePassword: usuario.mustChangePassword
         };
+    },
+
+    // Pensei comigo mesmo antes de fazer: "se é ruim o usuário usar o PUT de /usuarios/:id para editar a si mesmo
+    // (porque ele poderia trocar o id na URL ou tentar mandar perfil: 'ADMIN' no body), como eu faria isso seguro?"
+    // Daí cheguei à conclusão: "por que não aproveitar o /me do auth, que já pega o id direto do token, e criar
+    // um PUT /me para alterar só os próprios dados (nome, email e telefone) sem precisar de id na URL?"
+    atualizarPerfil: async (usuarioId, { nome, email, telefone }) => {
+        return await usuarioService.update(usuarioId, { nome, email, telefone });
     },
 
     // usada quando o meeiro entra pela primeira vez com a senha temporaria e define a senha definitiva
