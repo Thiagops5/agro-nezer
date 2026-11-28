@@ -6,6 +6,7 @@ CRYPTO_SECRET=
 PORT=
 FRONTEND_URL=
 DB_STORAGE=
+DATABASE_URL=
 
 # Seed inicial do Administrador
 ADMIN_NOME=
