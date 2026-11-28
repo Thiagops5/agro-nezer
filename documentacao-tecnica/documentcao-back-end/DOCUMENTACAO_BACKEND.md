@@ -14,6 +14,7 @@
   - [1.1.4. Módulo `acerto/` (Fechamento "Acerto a Meia" e PIX)](#1-1-4-acerto)
   - [1.1.5. Módulos `usuario/` e `auth/` (Perfis Admin/Meeiro e JWT)](#1-1-5-usuario-auth)
   - [1.1.6. Módulos `ocorrencia/` e `notificacao/` (Pragas, Pedidos e Caixa de Entrada Única)](#1-1-6-ocorrencia-notificacao)
+    - 🎓 **[Aula Sênior: Guia Didático do Módulo `notificacao/` e Próximos Conceitos](./AULA_NOTIFICACOES_E_CONCEITOS.md)**
 - [1.2. Lógicas Complexas de Negócio](#1-2-logicas)
   - [1.2.1. Integridade Referencial e Bloqueio de Exclusão (`409 Conflict`)](#1-2-1-bloqueio-409)
   - [1.2.2. Prevalência da Maior Carência e Custo Congelado (`db.transaction`)](#1-2-2-carencia-custo)
